@@ -18,6 +18,7 @@ export default function RequestDetail() {
   const [statusForm, setStatusForm] = useState({
     status: '', remarks: '', fileNumber: '', department: ''
   })
+  //test
   const [updating, setUpdating] = useState(false)
 
   const load = async () => {
