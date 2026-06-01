@@ -9,7 +9,7 @@ export default function Users() {
     const [selectedUser, setSelectedUser] = useState(null)
     const [newPassword, setNewPassword] = useState('')
     const [form, setForm] = useState({
-        name: '', email: '', phoneNumber: '', wardNumber: '', password: ''
+        name: '', email: '', phoneNumber: '', wardNumber: '', wardName: '', password: ''
     })
     const [creating, setCreating] = useState(false)
     const [error, setError] = useState('')
@@ -36,7 +36,7 @@ export default function Users() {
             await createUser(form)
             await load()
             setShowModal(false)
-            setForm({ name: '', email: '', phoneNumber: '', wardNumber: '', password: '' })
+            setForm({ name: '', email: '', phoneNumber: '', wardNumber: '', wardName: '', password: '' })
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create user')
         } finally {
@@ -97,6 +97,7 @@ export default function Users() {
                                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Email</th>
                                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Phone</th>
                                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Ward</th>
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Ward Name</th>
                                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
                                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                             </tr>
@@ -116,6 +117,7 @@ export default function Users() {
                                     <td className="px-6 py-4 text-sm text-gray-600">{u.email}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{u.phoneNumber || '-'}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600">Ward {u.wardNumber}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-600">{u.wardName || '-'}</td>
                                     <td className="px-6 py-4">
                                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                             }`}>
@@ -156,6 +158,7 @@ export default function Users() {
                                 { key: 'email', label: 'Email', type: 'email', placeholder: 'john@ward.in' },
                                 { key: 'phoneNumber', label: 'Phone Number', type: 'tel', placeholder: '9876543210' },
                                 { key: 'wardNumber', label: 'Ward Number', type: 'text', placeholder: '45' },
+                                { key: 'wardName', label: 'Ward Name', type: 'text', placeholder: 'Kadakampally Ward' },
                                 { key: 'password', label: 'Password', type: 'password', placeholder: 'Min 6 characters' },
                             ].map(({ key, label, type, placeholder }) => (
                                 <div key={key}>
