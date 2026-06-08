@@ -242,7 +242,7 @@ function getPendingWith(req) {
     case 'UNDER_MAYOR_REVIEW': return '👁️ Under Mayor Review'
     case 'APPROVED': return '✅ Approved by Mayor'
     case 'SENT_TO_DEPARTMENT': return `📤 Sent to: ${req.department || 'Department'}`
-    case 'FILE_NUMBER_GENERATED': return `📁 File: ${req.fileNumber || 'Generated'}`
+    case 'FILE_NUMBER_GENERATED': return req.fileNumber ? `📁 File: ${req.fileNumber}` : '📁 File No. Generated'
     case 'IN_PROGRESS': return '⚙️ In Progress'
     case 'CLOSED': return '🔒 Closed'
     case 'REJECTED': return '❌ Rejected'

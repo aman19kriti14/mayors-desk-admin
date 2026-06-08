@@ -197,28 +197,76 @@ export default function RequestDetail() {
             )}
           </div>
 
-          {/* Request Details */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <h3 className="font-semibold text-gray-800 mb-4">Request Details</h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-500 font-medium">Subject</p>
-                <p className="text-sm text-gray-800 font-semibold mt-0.5">{r.subject}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 font-medium">Description</p>
-                <p className="text-sm text-gray-700 mt-0.5 leading-relaxed">{r.description}</p>
-              </div>
-              {r.sections && (
-                <div>
-                  <p className="text-xs text-gray-500 font-medium mb-1">Sections</p>
-                  <div className="flex flex-wrap gap-2">
-                    {r.sections.split(',').map(s => (
-                      <span key={s} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">{s.trim()}</span>
-                    ))}
-                  </div>
+          {/* Request Details - Letterhead Format */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-blue-700 px-5 py-3 flex items-center justify-between">
+              <h3 className="font-semibold text-white text-sm">Official Request Letter</h3>
+              <span className="text-blue-200 text-xs">{r.requestId}</span>
+            </div>
+            <div className="p-5">
+              {/* Letter Header */}
+              <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-200">
+                {/* Left */}
+                <div className="text-xs text-gray-700 space-y-0.5">
+                  <p className="font-bold text-sm">{(r.wardName || 'WARD').toUpperCase()} WARD</p>
+                  <p className="text-gray-500">COUNCILLOR</p>
+                  <p className="text-gray-500">THIRUVANANTHAPURAM</p>
+                  <p className="text-gray-500">MUNICIPAL CORPORATION</p>
                 </div>
-              )}
+                {/* Center Logo */}
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
+                  <img src="https://pzjppyiqtwqzwnzxgarc.supabase.co/storage/v1/object/public/letterhead-assets/IMG-20260501-WA0006.jpg.jpeg"
+                    alt="Logo" className="w-full h-full object-cover" />
+                </div>
+                {/* Right */}
+                <div className="text-xs text-right text-gray-700 space-y-0.5">
+                  <p className="font-bold text-sm">{r.requesterName}</p>
+                  <p className="text-gray-500">COUNCILLOR</p>
+                  {r.phoneNumber && <p className="text-gray-500">PH: {r.phoneNumber}</p>}
+                  <p className="text-gray-400 mt-2">Date: {new Date(r.createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'2-digit',year:'numeric'})}</p>
+                </div>
+              </div>
+
+              {/* Letter Body */}
+              <div className="space-y-3 text-sm text-gray-800">
+                <p>ബഹുമാനപ്പെട്ട</p>
+                <p className="font-semibold">മേയർ അവർകൾക്ക്,</p>
+                <p>തിരുവനന്തപുരം കോർപ്പറേഷൻ,</p>
+                <p className="mb-4">തിരുവനന്തപുരം.</p>
+
+                {/* Subject */}
+                <p>
+                  <span className="font-bold">വിഷയം: </span>
+                  <span className="underline">{r.subject}</span>
+                </p>
+
+                <p className="mt-3">മഹോദയ/മഹോദയേ,</p>
+
+                <p className="leading-relaxed mt-2">{r.description}</p>
+
+                {r.sections && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 font-medium mb-1">Sections:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {r.sections.split(',').map(s => (
+                        <span key={s} className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{s.trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 pt-4">
+                  <p>താങ്കളുടെ വിശ്വസ്തൻ/വിശ്വസ്ത,</p>
+                  <p>വിശ്വസ്തതയോടെ,</p>
+                </div>
+
+                <div className="mt-6 text-right">
+                  <p className="font-semibold">{r.requesterName}</p>
+                  <p>വാർഡ് കൗൺസിലർ</p>
+                  <p className="text-xs text-gray-500">വാർഡ് {r.wardNumber}{r.wardName ? ` - ${r.wardName}` : ''}</p>
+                  <p className="text-xs text-gray-500">തിരുവനന്തപുരം കോർപ്പറേഷൻ</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -304,22 +352,22 @@ export default function RequestDetail() {
                 value={r.requesterName}
               />
               <TrackStep
-                done={['UNDER_MAYOR_REVIEW', 'APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['UNDER_MAYOR_REVIEW','APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Under Mayor Review"
                 value={r.status === 'UNDER_MAYOR_REVIEW' ? '⏳ Pending' : null}
               />
               <TrackStep
-                done={['APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Approved"
                 value={r.status === 'APPROVED' || r.status === 'SENT_TO_DEPARTMENT' ? 'Mayor' : null}
               />
               <TrackStep
-                done={['SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Sent to Department"
                 value={r.department}
               />
               <TrackStep
-                done={['FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="File Number Generated"
                 value={r.fileNumber}
               />
@@ -532,7 +580,7 @@ function getPendingWithDetailed(req) {
     case 'UNDER_MAYOR_REVIEW': return '👁️ Currently under Mayor\'s review'
     case 'APPROVED': return '✅ Approved by Mayor — awaiting next step'
     case 'SENT_TO_DEPARTMENT': return `📤 Sent to ${req.department || 'Department'} — awaiting action`
-    case 'FILE_NUMBER_GENERATED': return `📁 File number generated: ${req.fileNumber}`
+    case 'FILE_NUMBER_GENERATED': return req.fileNumber ? `📁 File number: ${req.fileNumber}` : '📁 File number generated'
     case 'IN_PROGRESS': return '⚙️ Work in progress'
     case 'CLOSED': return '🔒 Request completed and closed'
     case 'REJECTED': return '❌ Request rejected'
