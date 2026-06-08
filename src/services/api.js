@@ -7,14 +7,12 @@ const api = axios.create({
     headers: { 'Content-Type': 'application/json' },
 })
 
-// Auto attach token
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token')
     if (token) config.headers.Authorization = `Bearer ${token}`
     return config
 })
 
-// Handle 401
 api.interceptors.response.use(
     (res) => res,
     (err) => {
@@ -26,9 +24,9 @@ api.interceptors.response.use(
     }
 )
 
-// ── AUTH ────────────────────────────────────────
-export const login = (emailOrPhone, password) =>
-    api.post('/auth/login', { emailOrPhone, password })
+// ── AUTH ─────────────────────────────────────────
+export const login = (emailOrPhone, password, source = 'WEB') =>
+    api.post('/auth/login', { emailOrPhone, password, source })
 
 // ── REQUESTS ─────────────────────────────────────
 export const getAllRequests = (params) =>
@@ -58,13 +56,18 @@ export const downloadPdf = async (requestId) => {
 export const uploadSignedDoc = (requestId, file) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post(`/requests/${encodeURIComponent(requestId)}/signed`, formData, {
+    return api.post(`/requests/signed`, formData, {
+        params: { requestId },
         headers: { 'Content-Type': 'multipart/form-data' },
     })
 }
 
 export const getDashboardStats = () =>
     api.get('/requests/admin/stats')
+
+// ── EMAIL ────────────────────────────────────────
+export const sendEmail = (requestId, data) =>
+    api.post('/email/send', data, { params: { requestId } })
 
 // ── USERS ────────────────────────────────────────
 export const getUsers = () =>
