@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getRequestDetail, updateRequestStatus, downloadPdf, uploadSignedDoc, sendEmail } from '../../services/api'
+import { getRequestDetail, updateRequestStatus, downloadPdf, uploadSignedDoc, sendEmail, getVoiceNotes, addVoiceNote, deleteVoiceNote } from '../../services/api'
 import { STATUS_LABELS, STATUS_COLORS, ALL_STATUSES, formatDate } from '../../utils/status'
 
 const DEPARTMENTS = [
@@ -46,12 +46,28 @@ export default function RequestDetail() {
   const [sendingEmail, setSendingEmail] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
 
+  // Voice notes
+  const [voiceNotes, setVoiceNotes] = useState([])
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [uploadingVoice, setUploadingVoice] = useState(false)
+  const [noteText, setNoteText] = useState('')
+  const [voiceRecipient, setVoiceRecipient] = useState('')
+  const mediaRecorderRef = useRef(null)
+  const chunksRef = useRef([])
+  const timerRef = useRef(null)
+
   const load = async () => {
     setLoading(true)
     try {
       const res = await getRequestDetail(decodedId)
       setRequest(res.data.data)
       setStatusForm(f => ({ ...f, status: res.data.data.status }))
+      // Load voice notes
+      try {
+        const vnRes = await getVoiceNotes(decodedId)
+        setVoiceNotes(vnRes.data.data || [])
+      } catch (e) { console.error(e) }
       // Pre-fill email subject
       setEmailForm(f => ({
         ...f,
@@ -109,6 +125,53 @@ export default function RequestDetail() {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to send email')
     } finally { setSendingEmail(false) }
+  }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+      chunksRef.current = []
+      mediaRecorder.ondataavailable = (e) => chunksRef.current.push(e.data)
+      mediaRecorder.start()
+      setIsRecording(true)
+      setRecordingTime(0)
+      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
+    } catch (e) { alert('Microphone access denied') }
+  }
+
+  const stopRecording = () => {
+    if (!mediaRecorderRef.current) return
+    mediaRecorderRef.current.onstop = async () => {
+      const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+      const file = new File([blob], 'voice-note.webm', { type: 'audio/webm' })
+      setUploadingVoice(true)
+      try {
+        await addVoiceNote(decodedId, file, noteText, recordingTime, voiceRecipient)
+        setVoiceRecipient('')
+        const vnRes = await getVoiceNotes(decodedId)
+        setVoiceNotes(vnRes.data.data || [])
+        setNoteText('')
+      } catch (e) { alert('Failed to save voice note') }
+      finally { setUploadingVoice(false) }
+    }
+    mediaRecorderRef.current.stop()
+    mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop())
+    clearInterval(timerRef.current)
+    setIsRecording(false)
+  }
+
+  const handleDeleteVoiceNote = async (id) => {
+    if (!confirm('Delete this voice note?')) return
+    await deleteVoiceNote(id)
+    setVoiceNotes(v => v.filter(n => n.id !== id))
+  }
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60)
+    const s = secs % 60
+    return `${m}:${s.toString().padStart(2, '0')}`
   }
 
   if (loading) return (
@@ -223,7 +286,7 @@ export default function RequestDetail() {
                   <p className="font-bold text-sm">{r.requesterName}</p>
                   <p className="text-gray-500">COUNCILLOR</p>
                   {r.phoneNumber && <p className="text-gray-500">PH: {r.phoneNumber}</p>}
-                  <p className="text-gray-400 mt-2">Date: {new Date(r.createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'2-digit',year:'numeric'})}</p>
+                  <p className="text-gray-400 mt-2">Date: {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                 </div>
               </div>
 
@@ -268,6 +331,121 @@ export default function RequestDetail() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Voice Notes */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-800">🎙️ Voice Notes</h3>
+              <span className="text-xs text-gray-400">{voiceNotes.length} note(s)</span>
+            </div>
+
+            {/* Recorder */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
+
+              {/* Recipient selector */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Send To</label>
+                <select
+                  value={voiceRecipient}
+                  onChange={(e) => setVoiceRecipient(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select recipient...</option>
+                  <option value="councillor">👤 Councillor ({r.requesterName})</option>
+                  <optgroup label="── Committees ──">
+                    <option value="Finance Committee">Finance Committee</option>
+                    <option value="Health Committee">Health Committee</option>
+                    <option value="Development Committee">Development Committee</option>
+                    <option value="Town Planning Committee">Town Planning Committee</option>
+                    <option value="Education & Sports Committee">Education & Sports Committee</option>
+                    <option value="Welfare Committee">Welfare Committee</option>
+                    <option value="Public Works Committee">Public Works Committee</option>
+                    <option value="Taxation Committee">Taxation Committee</option>
+                  </optgroup>
+                  <optgroup label="── Others ──">
+                    <option value="Secretary">Secretary</option>
+                    <option value="Deputy Mayor">Deputy Mayor</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Add a note label (optional)"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <div className="flex items-center gap-3">
+                {!isRecording ? (
+                  <button
+                    onClick={startRecording}
+                    disabled={uploadingVoice || !voiceRecipient}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium ${voiceRecipient ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'
+                      }`}
+                  >
+                    🎙️ Start Recording
+                  </button>
+                ) : (
+                  <button
+                    onClick={stopRecording}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium bg-gray-700 animate-pulse"
+                  >
+                    ⏹️ Stop ({formatTime(recordingTime)})
+                  </button>
+                )}
+                {uploadingVoice && (
+                  <span className="text-sm text-gray-500">⏳ Saving & notifying...</span>
+                )}
+                {!voiceRecipient && !isRecording && (
+                  <span className="text-xs text-orange-500">Select recipient first</span>
+                )}
+              </div>
+            </div>
+
+            {/* Voice notes list */}
+            {voiceNotes.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">No voice notes yet</p>
+            ) : (
+              <div className="space-y-3">
+                {voiceNotes.map((note) => (
+                  <div key={note.id} className="flex items-start gap-3 p-3 bg-purple-50 rounded-xl">
+                    <span className="text-2xl">🎙️</span>
+                    <div className="flex-1 min-w-0">
+                      {note.noteText && (
+                        <p className="text-sm font-medium text-gray-800 mb-1">{note.noteText}</p>
+                      )}
+                      <audio controls src={note.audioUrl} className="w-full h-8" />
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs text-gray-400">{note.addedBy}</span>
+                        {note.recipientName && (
+                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                            → {note.recipientName}
+                          </span>
+                        )}
+                        {note.durationSecs && (
+                          <span className="text-xs text-gray-400">• {formatTime(note.durationSecs)}</span>
+                        )}
+                        <span className="text-xs text-gray-400">
+                          • {new Date(note.createdAt).toLocaleDateString('en-IN')}
+                        </span>
+                        {note.notified && (
+                          <span className="text-xs text-green-600">✅ Notified</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteVoiceNote(note.id)}
+                      className="text-red-400 hover:text-red-600 text-xs flex-shrink-0"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Documents */}
@@ -352,22 +530,22 @@ export default function RequestDetail() {
                 value={r.requesterName}
               />
               <TrackStep
-                done={['UNDER_MAYOR_REVIEW','APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['UNDER_MAYOR_REVIEW', 'APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="Under Mayor Review"
                 value={r.status === 'UNDER_MAYOR_REVIEW' ? '⏳ Pending' : null}
               />
               <TrackStep
-                done={['APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="Approved"
                 value={r.status === 'APPROVED' || r.status === 'SENT_TO_DEPARTMENT' ? 'Mayor' : null}
               />
               <TrackStep
-                done={['SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="Sent to Department"
                 value={r.department}
               />
               <TrackStep
-                done={['FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="File Number Generated"
                 value={r.fileNumber}
               />
