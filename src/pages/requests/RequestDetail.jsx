@@ -128,6 +128,8 @@ export default function RequestDetail() {
     } finally { setSendingEmail(false) }
   }
 
+  const MAX_RECORDING_SECS = 60 // 1 minute limit
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -138,7 +140,15 @@ export default function RequestDetail() {
       mediaRecorder.start()
       setIsRecording(true)
       setRecordingTime(0)
-      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
+      timerRef.current = setInterval(() => {
+        setRecordingTime(t => {
+          if (t + 1 >= MAX_RECORDING_SECS) {
+            stopRecording()
+            return MAX_RECORDING_SECS
+          }
+          return t + 1
+        })
+      }, 1000)
     } catch (e) { alert('Microphone access denied') }
   }
 
@@ -228,10 +238,11 @@ export default function RequestDetail() {
               await toggleHot(decodedId)
               await load()
             }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${r.isHot
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${
+              r.isHot
                 ? 'bg-red-50 border-red-300 text-red-600'
                 : 'bg-white border-gray-200 text-gray-600'
-              }`}
+            }`}
             title={r.isHot ? 'Unmark as Hot' : 'Mark as Hot Request'}
           >
             🔥 {r.isHot ? 'Hot' : 'Mark Hot'}
@@ -307,7 +318,7 @@ export default function RequestDetail() {
                   <p className="font-bold text-sm">{r.requesterName}</p>
                   <p className="text-gray-500">COUNCILLOR</p>
                   {r.phoneNumber && <p className="text-gray-500">PH: {r.phoneNumber}</p>}
-                  <p className="text-gray-400 mt-2">Date: {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
+                  <p className="text-gray-400 mt-2">Date: {new Date(r.createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'2-digit',year:'numeric'})}</p>
                 </div>
               </div>
 
@@ -404,8 +415,9 @@ export default function RequestDetail() {
                   <button
                     onClick={startRecording}
                     disabled={uploadingVoice || !voiceRecipient}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium ${voiceRecipient ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'
-                      }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium ${
+                      voiceRecipient ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'
+                    }`}
                   >
                     🎙️ Start Recording
                   </button>
@@ -414,7 +426,7 @@ export default function RequestDetail() {
                     onClick={stopRecording}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium bg-gray-700 animate-pulse"
                   >
-                    ⏹️ Stop ({formatTime(recordingTime)})
+                    ⏹️ Stop ({formatTime(recordingTime)} / 1:00)
                   </button>
                 )}
                 {uploadingVoice && (
@@ -551,22 +563,22 @@ export default function RequestDetail() {
                 value={r.requesterName}
               />
               <TrackStep
-                done={['UNDER_MAYOR_REVIEW', 'APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['UNDER_MAYOR_REVIEW','APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Under Mayor Review"
                 value={r.status === 'UNDER_MAYOR_REVIEW' ? '⏳ Pending' : null}
               />
               <TrackStep
-                done={['APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Approved"
                 value={r.status === 'APPROVED' || r.status === 'SENT_TO_DEPARTMENT' ? 'Mayor' : null}
               />
               <TrackStep
-                done={['SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Sent to Department"
                 value={r.department}
               />
               <TrackStep
-                done={['FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="File Number Generated"
                 value={r.fileNumber}
               />
@@ -760,7 +772,7 @@ export default function RequestDetail() {
                             className="rounded"
                           />
                           <label htmlFor={`vn-${note.id}`} className="text-sm text-gray-600 flex-1">
-                            {note.noteText || 'Voice Note'}
+                            {note.noteText || 'Voice Note'} 
                             {note.recipientName && <span className="text-xs text-purple-600 ml-1">→ {note.recipientName}</span>}
                           </label>
                         </div>
