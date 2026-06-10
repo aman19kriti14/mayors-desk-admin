@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAllRequests } from '../../services/api'
-import { STATUS_LABELS, STATUS_COLORS, STATUS_DOT, ALL_STATUSES, formatDate } from '../../utils/status'
+import { STATUS_LABELS, STATUS_COLORS, STATUS_DOT, formatDate } from '../../utils/status'
 
 export default function Requests() {
   const [requests, setRequests] = useState([])
@@ -9,6 +9,7 @@ export default function Requests() {
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState('')
   const [wardNumber, setWardNumber] = useState('')
+  const [hotOnly, setHotOnly] = useState(false)
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
@@ -21,6 +22,7 @@ export default function Requests() {
         keyword: keyword || undefined,
         status: status || undefined,
         wardNumber: wardNumber || undefined,
+        hotOnly: hotOnly || undefined,
         page,
         size: 15,
       })
@@ -32,11 +34,10 @@ export default function Requests() {
     } finally {
       setLoading(false)
     }
-  }, [keyword, status, wardNumber, page])
+  }, [keyword, status, wardNumber, hotOnly, page])
 
   useEffect(() => { load() }, [load])
 
-  // Group statuses for cleaner dropdown
   const STATUS_GROUPS = [
     { label: '── Pending ──', options: ['SUBMITTED', 'UNDER_MAYOR_REVIEW'] },
     { label: '── In Process ──', options: ['APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS'] },
@@ -67,7 +68,6 @@ export default function Requests() {
             className="flex-1 min-w-48 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Ward Number Filter */}
           <input
             type="text"
             placeholder="Ward No. (e.g. 045)"
@@ -77,7 +77,6 @@ export default function Requests() {
             className="w-40 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Grouped Status Dropdown */}
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); setPage(0) }}
@@ -93,7 +92,7 @@ export default function Requests() {
             ))}
           </select>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => { setPage(0); load() }}
               className="px-5 py-2 rounded-xl text-white text-sm font-medium"
@@ -102,7 +101,17 @@ export default function Requests() {
               Search
             </button>
             <button
-              onClick={() => { setKeyword(''); setStatus(''); setWardNumber(''); setPage(0) }}
+              onClick={() => { setHotOnly(!hotOnly); setPage(0) }}
+              className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                hotOnly
+                  ? 'bg-red-50 border-red-300 text-red-600'
+                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              🔥 {hotOnly ? 'Hot Only' : 'Hot'}
+            </button>
+            <button
+              onClick={() => { setKeyword(''); setStatus(''); setWardNumber(''); setHotOnly(false); setPage(0) }}
               className="px-4 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50"
             >
               Clear
@@ -143,12 +152,13 @@ export default function Requests() {
                     <tr
                       key={req.requestId}
                       onClick={() => navigate(`/requests/${encodeURIComponent(req.requestId)}`)}
-                      className="hover:bg-blue-50 cursor-pointer transition-colors"
+                      className={`hover:bg-blue-50 cursor-pointer transition-colors ${req.isHot ? 'bg-red-50/40' : ''}`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_DOT[req.status]}`} />
                           <span className="text-sm font-semibold text-blue-700">{req.requestId}</span>
+                          {req.isHot && <span title="Hot Request" className="text-base">🔥</span>}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -181,13 +191,13 @@ export default function Requests() {
                 <div
                   key={req.requestId}
                   onClick={() => navigate(`/requests/${encodeURIComponent(req.requestId)}`)}
-                  className="p-4 hover:bg-gray-50 cursor-pointer"
+                  className={`p-4 hover:bg-gray-50 cursor-pointer ${req.isHot ? 'bg-red-50/40' : ''}`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${STATUS_DOT[req.status]}`} />
                       <span className="text-sm font-bold text-blue-700">{req.requestId}</span>
-                      {req.isHot && <span title="Hot Request">🔥</span>}
+                      {req.isHot && <span>🔥</span>}
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[req.status]}`}>
                       {STATUS_LABELS[req.status]}
@@ -201,9 +211,7 @@ export default function Requests() {
                     <span>•</span>
                     <span>{formatDate(req.createdAt)}</span>
                   </div>
-                  <div className="ml-4 mt-1 text-xs text-orange-600">
-                    {getPendingWith(req)}
-                  </div>
+                  <div className="ml-4 mt-1 text-xs text-orange-600">{getPendingWith(req)}</div>
                 </div>
               ))}
             </div>

@@ -102,10 +102,10 @@ export default function Letterhead() {
                         </div>
 
                         {[
-                            { key: 'orgName', label: 'Organisation Name', placeholder: 'Trivandrum City Municipal Corporation' },
+                            { key: 'orgName', label: 'Organisation Name', placeholder: 'Thiruvananthapuram City Municipal Corporation' },
                             { key: 'wardOfficeName', label: 'Ward Office Name', placeholder: "Mayor's Office" },
                             { key: 'signatoryName', label: 'Signatory Name', placeholder: 'Mayor' },
-                            { key: 'signatoryDesignation', label: 'Signatory Designation', placeholder: 'Mayor, Trivandrum City Municipal Corporation' },
+                            { key: 'signatoryDesignation', label: 'Signatory Designation', placeholder: 'Mayor, Thiruvananthapuram City Municipal Corporation' },
                         ].map(({ key, label, placeholder }) => (
                             <div key={key}>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>

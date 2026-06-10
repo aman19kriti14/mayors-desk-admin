@@ -49,7 +49,7 @@ export default function Login() {
 
                 <h1 className="text-4xl font-bold text-center mb-2">Mayor's Desk</h1>
                 <p className="text-blue-200 text-lg text-center mb-12">
-                    Trivandrum City Municipal Corporation
+                    Thiruvananthapuram City Municipal Corporation
                 </p>
 
                 <div className="flex flex-col items-center">
@@ -59,7 +59,7 @@ export default function Login() {
                     </div>
                     <p className="text-blue-200 text-sm">Honourable Mayor</p>
                     <p className="text-white font-semibold text-center mt-1">
-                        Trivandrum City Municipal Corporation
+                        Thiruvananthapuram City Municipal Corporation
                     </p>
                 </div>
 
@@ -138,7 +138,7 @@ export default function Login() {
                     </form>
 
                     <div className="mt-6 pt-4 border-t border-gray-100 text-center space-y-1">
-                        <p className="text-xs text-gray-400">Trivandrum City Municipal Corporation</p>
+                        <p className="text-xs text-gray-400">Thiruvananthapuram City Municipal Corporation</p>
                         <p className="text-xs text-gray-300">⚡ Powered by Gatistack Technologies</p>
                     </div>
                 </div>
