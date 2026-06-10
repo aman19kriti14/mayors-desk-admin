@@ -43,7 +43,7 @@ export default function RequestDetail() {
 
   // Email modal
   const [showEmailModal, setShowEmailModal] = useState(false)
-  const [emailForm, setEmailForm] = useState({ to: '', subject: '', body: '', attachPdf: true })
+  const [emailForm, setEmailForm] = useState({ to: '', subject: '', body: '', attachPdf: true, voiceNoteIds: [] })
   const [sendingEmail, setSendingEmail] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
 
@@ -739,6 +739,35 @@ export default function RequestDetail() {
                     📄 Attach request PDF
                   </label>
                 </div>
+
+                {/* Voice notes selection */}
+                {voiceNotes.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">🎙️ Include Voice Notes</p>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {voiceNotes.map((note) => (
+                        <div key={note.id} className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
+                          <input
+                            type="checkbox"
+                            id={`vn-${note.id}`}
+                            checked={emailForm.voiceNoteIds.includes(note.id)}
+                            onChange={(e) => {
+                              const ids = e.target.checked
+                                ? [...emailForm.voiceNoteIds, note.id]
+                                : emailForm.voiceNoteIds.filter(id => id !== note.id)
+                              setEmailForm({ ...emailForm, voiceNoteIds: ids })
+                            }}
+                            className="rounded"
+                          />
+                          <label htmlFor={`vn-${note.id}`} className="text-sm text-gray-600 flex-1">
+                            {note.noteText || 'Voice Note'}
+                            {note.recipientName && <span className="text-xs text-purple-600 ml-1">→ {note.recipientName}</span>}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
