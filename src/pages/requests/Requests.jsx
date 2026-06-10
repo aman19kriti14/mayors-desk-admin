@@ -187,6 +187,7 @@ export default function Requests() {
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${STATUS_DOT[req.status]}`} />
                       <span className="text-sm font-bold text-blue-700">{req.requestId}</span>
+                      {req.isHot && <span title="Hot Request">🔥</span>}
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[req.status]}`}>
                       {STATUS_LABELS[req.status]}

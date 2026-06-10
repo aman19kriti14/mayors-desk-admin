@@ -4,8 +4,9 @@ import { getUsers, createUser, toggleUserStatus, resetPassword } from '../../ser
 const ROLES = [
     { value: 'WARD_MEMBER', label: 'Ward Member', group: 'Mobile App' },
     { value: 'ADMIN', label: 'Admin', group: 'Web Portal' },
-    { value: 'DEPUTY_MAYOR', label: 'Deputy Mayor', group: 'Web Portal' },
-    { value: 'SECRETARY', label: 'Secretary', group: 'Web Portal' },
+    { value: 'MAYOR_OFFICE', label: "Mayor's Office", group: 'Web Portal' },
+    { value: 'DEPUTY_MAYOR', label: 'Deputy Mayor', group: 'Standing Committees' },
+    { value: 'SECRETARY', label: 'Secretary', group: 'Standing Committees' },
     { value: 'COMMITTEE_FINANCE', label: 'Finance Committee', group: 'Standing Committees' },
     { value: 'COMMITTEE_HEALTH', label: 'Health Committee', group: 'Standing Committees' },
     { value: 'COMMITTEE_DEVELOPMENT', label: 'Development Committee', group: 'Standing Committees' },
@@ -21,6 +22,7 @@ const ROLE_GROUPS = ['Mobile App', 'Web Portal', 'Standing Committees']
 const ROLE_COLORS = {
     WARD_MEMBER: 'bg-blue-100 text-blue-700',
     ADMIN: 'bg-red-100 text-red-700',
+    MAYOR_OFFICE: 'bg-blue-100 text-blue-800',
     DEPUTY_MAYOR: 'bg-purple-100 text-purple-700',
     SECRETARY: 'bg-indigo-100 text-indigo-700',
     COMMITTEE_FINANCE: 'bg-green-100 text-green-700',

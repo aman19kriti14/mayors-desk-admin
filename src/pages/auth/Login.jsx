@@ -18,7 +18,7 @@ export default function Login() {
         setLoading(true)
         try {
             const user = await login(form.emailOrPhone, form.password)
-            const WEB_ROLES = ['ADMIN', 'DEPUTY_MAYOR', 'SECRETARY',
+            const WEB_ROLES = ['ADMIN', 'MAYOR_OFFICE', 'DEPUTY_MAYOR', 'SECRETARY',
                 'COMMITTEE_FINANCE', 'COMMITTEE_HEALTH', 'COMMITTEE_DEVELOPMENT',
                 'COMMITTEE_TOWN_PLANNING', 'COMMITTEE_EDUCATION_SPORTS',
                 'COMMITTEE_WELFARE', 'COMMITTEE_PUBLIC_WORKS', 'COMMITTEE_TAXATION']

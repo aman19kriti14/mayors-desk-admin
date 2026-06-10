@@ -21,9 +21,9 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()
   if (loading) return <LoadingSpinner />
   if (!user) return <Navigate to="/login" replace />
-  const WEB_ROLES = ['ADMIN', 'DEPUTY_MAYOR', 'SECRETARY', 'COMMITTEE_FINANCE',
-    'COMMITTEE_HEALTH', 'COMMITTEE_DEVELOPMENT', 'COMMITTEE_TOWN_PLANNING',
-    'COMMITTEE_EDUCATION_SPORTS', 'COMMITTEE_WELFARE', 'COMMITTEE_PUBLIC_WORKS', 'COMMITTEE_TAXATION']
+  const WEB_ROLES = ['ADMIN','MAYOR_OFFICE','DEPUTY_MAYOR','SECRETARY','COMMITTEE_FINANCE',
+    'COMMITTEE_HEALTH','COMMITTEE_DEVELOPMENT','COMMITTEE_TOWN_PLANNING',
+    'COMMITTEE_EDUCATION_SPORTS','COMMITTEE_WELFARE','COMMITTEE_PUBLIC_WORKS','COMMITTEE_TAXATION']
   if (!WEB_ROLES.includes(user.role)) return <Navigate to="/login" replace />
   return children
 }
