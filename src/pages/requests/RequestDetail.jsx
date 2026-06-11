@@ -238,11 +238,10 @@ export default function RequestDetail() {
               await toggleHot(decodedId)
               await load()
             }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${
-              r.isHot
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${r.isHot
                 ? 'bg-red-50 border-red-300 text-red-600'
                 : 'bg-white border-gray-200 text-gray-600'
-            }`}
+              }`}
             title={r.isHot ? 'Unmark as Hot' : 'Mark as Hot Request'}
           >
             🔥 {r.isHot ? 'Hot' : 'Mark Hot'}
@@ -261,6 +260,123 @@ export default function RequestDetail() {
           </button>
         </div>
       </div>
+
+      {/* Voice Notes - Admin Section (Top) */}
+      {/* Voice Notes */}
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-800">🎙️ Voice Notes</h3>
+          <span className="text-xs text-gray-400">{voiceNotes.length} note(s)</span>
+        </div>
+
+        {/* Recorder */}
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
+
+          {/* Recipient selector */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Send To</label>
+            <select
+              value={voiceRecipient}
+              onChange={(e) => setVoiceRecipient(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select recipient...</option>
+              <option value="councillor">👤 Councillor ({r.requesterName})</option>
+              <optgroup label="── Committees ──">
+                <option value="Finance Committee">Finance Committee</option>
+                <option value="Health Committee">Health Committee</option>
+                <option value="Development Committee">Development Committee</option>
+                <option value="Town Planning Committee">Town Planning Committee</option>
+                <option value="Education & Sports Committee">Education & Sports Committee</option>
+                <option value="Welfare Committee">Welfare Committee</option>
+                <option value="Public Works Committee">Public Works Committee</option>
+                <option value="Taxation Committee">Taxation Committee</option>
+              </optgroup>
+              <optgroup label="── Others ──">
+                <option value="Secretary">Secretary</option>
+                <option value="Deputy Mayor">Deputy Mayor</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <input
+            type="text"
+            placeholder="Add a note label (optional)"
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <div className="flex items-center gap-3">
+            {!isRecording ? (
+              <button
+                onClick={startRecording}
+                disabled={uploadingVoice || !voiceRecipient}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium ${voiceRecipient ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'
+                  }`}
+              >
+                🎙️ Start Recording
+              </button>
+            ) : (
+              <button
+                onClick={stopRecording}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium bg-gray-700 animate-pulse"
+              >
+                ⏹️ Stop ({formatTime(recordingTime)} / 1:00)
+              </button>
+            )}
+            {uploadingVoice && (
+              <span className="text-sm text-gray-500">⏳ Saving & notifying...</span>
+            )}
+            {!voiceRecipient && !isRecording && (
+              <span className="text-xs text-orange-500">Select recipient first</span>
+            )}
+          </div>
+        </div>
+
+        {/* Voice notes list */}
+        {voiceNotes.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">No voice notes yet</p>
+        ) : (
+          <div className="space-y-3">
+            {voiceNotes.map((note) => (
+              <div key={note.id} className="flex items-start gap-3 p-3 bg-purple-50 rounded-xl">
+                <span className="text-2xl">🎙️</span>
+                <div className="flex-1 min-w-0">
+                  {note.noteText && (
+                    <p className="text-sm font-medium text-gray-800 mb-1">{note.noteText}</p>
+                  )}
+                  <audio controls src={note.audioUrl} className="w-full h-8" />
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-xs text-gray-400">{note.addedBy}</span>
+                    {note.recipientName && (
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                        → {note.recipientName}
+                      </span>
+                    )}
+                    {note.durationSecs && (
+                      <span className="text-xs text-gray-400">• {formatTime(note.durationSecs)}</span>
+                    )}
+                    <span className="text-xs text-gray-400">
+                      • {new Date(note.createdAt).toLocaleDateString('en-IN')}
+                    </span>
+                    {note.notified && (
+                      <span className="text-xs text-green-600">✅ Notified</span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDeleteVoiceNote(note.id)}
+                  className="text-red-400 hover:text-red-600 text-xs flex-shrink-0"
+                >
+                  🗑️
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left */}
@@ -292,6 +408,7 @@ export default function RequestDetail() {
             )}
           </div>
 
+
           {/* Request Details - Letterhead Format */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="bg-blue-700 px-5 py-3 flex items-center justify-between">
@@ -318,7 +435,7 @@ export default function RequestDetail() {
                   <p className="font-bold text-sm">{r.requesterName}</p>
                   <p className="text-gray-500">COUNCILLOR</p>
                   {r.phoneNumber && <p className="text-gray-500">PH: {r.phoneNumber}</p>}
-                  <p className="text-gray-400 mt-2">Date: {new Date(r.createdAt).toLocaleDateString('en-IN', {day:'2-digit',month:'2-digit',year:'numeric'})}</p>
+                  <p className="text-gray-400 mt-2">Date: {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                 </div>
               </div>
 
@@ -365,173 +482,10 @@ export default function RequestDetail() {
             </div>
           </div>
 
-          {/* Voice Notes */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800">🎙️ Voice Notes</h3>
-              <span className="text-xs text-gray-400">{voiceNotes.length} note(s)</span>
-            </div>
 
-            {/* Recorder */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
 
-              {/* Recipient selector */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Send To</label>
-                <select
-                  value={voiceRecipient}
-                  onChange={(e) => setVoiceRecipient(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select recipient...</option>
-                  <option value="councillor">👤 Councillor ({r.requesterName})</option>
-                  <optgroup label="── Committees ──">
-                    <option value="Finance Committee">Finance Committee</option>
-                    <option value="Health Committee">Health Committee</option>
-                    <option value="Development Committee">Development Committee</option>
-                    <option value="Town Planning Committee">Town Planning Committee</option>
-                    <option value="Education & Sports Committee">Education & Sports Committee</option>
-                    <option value="Welfare Committee">Welfare Committee</option>
-                    <option value="Public Works Committee">Public Works Committee</option>
-                    <option value="Taxation Committee">Taxation Committee</option>
-                  </optgroup>
-                  <optgroup label="── Others ──">
-                    <option value="Secretary">Secretary</option>
-                    <option value="Deputy Mayor">Deputy Mayor</option>
-                  </optgroup>
-                </select>
-              </div>
 
-              <input
-                type="text"
-                placeholder="Add a note label (optional)"
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
 
-              <div className="flex items-center gap-3">
-                {!isRecording ? (
-                  <button
-                    onClick={startRecording}
-                    disabled={uploadingVoice || !voiceRecipient}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium ${
-                      voiceRecipient ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    🎙️ Start Recording
-                  </button>
-                ) : (
-                  <button
-                    onClick={stopRecording}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium bg-gray-700 animate-pulse"
-                  >
-                    ⏹️ Stop ({formatTime(recordingTime)} / 1:00)
-                  </button>
-                )}
-                {uploadingVoice && (
-                  <span className="text-sm text-gray-500">⏳ Saving & notifying...</span>
-                )}
-                {!voiceRecipient && !isRecording && (
-                  <span className="text-xs text-orange-500">Select recipient first</span>
-                )}
-              </div>
-            </div>
-
-            {/* Voice notes list */}
-            {voiceNotes.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">No voice notes yet</p>
-            ) : (
-              <div className="space-y-3">
-                {voiceNotes.map((note) => (
-                  <div key={note.id} className="flex items-start gap-3 p-3 bg-purple-50 rounded-xl">
-                    <span className="text-2xl">🎙️</span>
-                    <div className="flex-1 min-w-0">
-                      {note.noteText && (
-                        <p className="text-sm font-medium text-gray-800 mb-1">{note.noteText}</p>
-                      )}
-                      <audio controls src={note.audioUrl} className="w-full h-8" />
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs text-gray-400">{note.addedBy}</span>
-                        {note.recipientName && (
-                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-                            → {note.recipientName}
-                          </span>
-                        )}
-                        {note.durationSecs && (
-                          <span className="text-xs text-gray-400">• {formatTime(note.durationSecs)}</span>
-                        )}
-                        <span className="text-xs text-gray-400">
-                          • {new Date(note.createdAt).toLocaleDateString('en-IN')}
-                        </span>
-                        {note.notified && (
-                          <span className="text-xs text-green-600">✅ Notified</span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteVoiceNote(note.id)}
-                      className="text-red-400 hover:text-red-600 text-xs flex-shrink-0"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Documents */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <h3 className="font-semibold text-gray-800 mb-4">Documents</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">📄</span>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">Official Request Letter</p>
-                    <p className="text-xs text-gray-500">Generated PDF with letterhead</p>
-                  </div>
-                </div>
-                <button onClick={handleDownload} className="text-sm text-blue-700 font-medium hover:text-blue-900">Download</button>
-              </div>
-
-              {r.signedDocumentUrl && (
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">✅</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">Signed Document</p>
-                      <p className="text-xs text-gray-500">Uploaded by admin</p>
-                    </div>
-                  </div>
-                  <a href={r.signedDocumentUrl} target="_blank" rel="noreferrer"
-                    className="text-sm text-green-700 font-medium">View</a>
-                </div>
-              )}
-
-              {r.attachmentUrls && r.attachmentUrls.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-2">📎 Attachments ({r.attachmentUrls.length})</p>
-                  {r.attachmentUrls.map((url, i) => {
-                    const filename = decodeURIComponent(url.split('/').pop() || `Attachment ${i + 1}`)
-                    const isImage = /\.(jpg|jpeg|png|gif)$/i.test(filename)
-                    const isPdf = /\.pdf$/i.test(filename)
-                    return (
-                      <div key={i} className="flex items-center justify-between p-3 bg-orange-50 rounded-xl mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{isPdf ? '📄' : isImage ? '🖼️' : '📎'}</span>
-                          <p className="text-sm font-medium text-gray-800 max-w-xs truncate">{filename}</p>
-                        </div>
-                        <a href={url} target="_blank" rel="noreferrer"
-                          className="text-sm text-orange-700 font-medium">{isImage ? 'View' : 'Download'}</a>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Right */}
@@ -563,22 +517,22 @@ export default function RequestDetail() {
                 value={r.requesterName}
               />
               <TrackStep
-                done={['UNDER_MAYOR_REVIEW','APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['UNDER_MAYOR_REVIEW', 'APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="Under Mayor Review"
                 value={r.status === 'UNDER_MAYOR_REVIEW' ? '⏳ Pending' : null}
               />
               <TrackStep
-                done={['APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="Approved"
                 value={r.status === 'APPROVED' || r.status === 'SENT_TO_DEPARTMENT' ? 'Mayor' : null}
               />
               <TrackStep
-                done={['SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="Sent to Department"
                 value={r.department}
               />
               <TrackStep
-                done={['FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
+                done={['FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
                 label="File Number Generated"
                 value={r.fileNumber}
               />
@@ -772,7 +726,7 @@ export default function RequestDetail() {
                             className="rounded"
                           />
                           <label htmlFor={`vn-${note.id}`} className="text-sm text-gray-600 flex-1">
-                            {note.noteText || 'Voice Note'} 
+                            {note.noteText || 'Voice Note'}
                             {note.recipientName && <span className="text-xs text-purple-600 ml-1">→ {note.recipientName}</span>}
                           </label>
                         </div>
