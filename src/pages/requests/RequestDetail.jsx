@@ -219,6 +219,70 @@ export default function RequestDetail() {
         </div>
       </div>
 
+      {/* ── QUICK VOICE NOTE (collapsed by default) ── */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <button
+          onClick={() => document.getElementById('quick-vn').classList.toggle('hidden')}
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-purple-600">🎙️</span>
+            <span className="text-sm font-semibold text-gray-700">Record & Send Voice Note</span>
+            {voiceNotes.length > 0 && (
+              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{voiceNotes.length}</span>
+            )}
+          </div>
+          <span className="text-gray-400 text-xs">▼ Expand</span>
+        </button>
+        <div id="quick-vn" className="hidden border-t border-gray-100 p-4 space-y-3">
+          <div className="flex gap-3 flex-wrap">
+            <div className="flex-1 min-w-48">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Send To</label>
+              <select value={voiceRecipient} onChange={(e) => setVoiceRecipient(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="">Select recipient...</option>
+                <option value="councillor">👤 Councillor ({r.requesterName})</option>
+                <optgroup label="── Committees ──">
+                  <option value="Finance Committee">Finance Committee</option>
+                  <option value="Health Committee">Health Committee</option>
+                  <option value="Development Committee">Development Committee</option>
+                  <option value="Town Planning Committee">Town Planning Committee</option>
+                  <option value="Education & Sports Committee">Education & Sports Committee</option>
+                  <option value="Welfare Committee">Welfare Committee</option>
+                  <option value="Public Works Committee">Public Works Committee</option>
+                  <option value="Taxation Committee">Taxation Committee</option>
+                </optgroup>
+                <optgroup label="── Others ──">
+                  <option value="Secretary">Secretary</option>
+                  <option value="Deputy Mayor">Deputy Mayor</option>
+                </optgroup>
+              </select>
+            </div>
+            <div className="flex-1 min-w-48">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Note Label (optional)</label>
+              <input type="text" placeholder="e.g. Urgent follow up" value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {!isRecording ? (
+              <button onClick={startRecording} disabled={uploadingVoice || !voiceRecipient}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium ${voiceRecipient ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'}`}>
+                🎙️ Start Recording
+              </button>
+            ) : (
+              <button onClick={stopRecording}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium bg-gray-700 animate-pulse">
+                ⏹️ Stop ({formatTime(recordingTime)} / 1:00)
+              </button>
+            )}
+            {uploadingVoice && <span className="text-sm text-gray-500">⏳ Saving...</span>}
+            {!voiceRecipient && !isRecording && <span className="text-xs text-orange-500">Select recipient first</span>}
+          </div>
+        </div>
+      </div>
+
       {/* ── MAIN GRID ──────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -357,61 +421,15 @@ export default function RequestDetail() {
             </div>
           </div>
 
-          {/* 4. Voice Notes */}
+          {/* 4. Voice Notes List */}
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-800">🎙️ Voice Notes</h3>
               <span className="text-xs text-gray-400">{voiceNotes.length} note(s)</span>
             </div>
 
-            {/* Recorder */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Send To</label>
-                <select value={voiceRecipient} onChange={(e) => setVoiceRecipient(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Select recipient...</option>
-                  <option value="councillor">👤 Councillor ({r.requesterName})</option>
-                  <optgroup label="── Committees ──">
-                    <option value="Finance Committee">Finance Committee</option>
-                    <option value="Health Committee">Health Committee</option>
-                    <option value="Development Committee">Development Committee</option>
-                    <option value="Town Planning Committee">Town Planning Committee</option>
-                    <option value="Education & Sports Committee">Education & Sports Committee</option>
-                    <option value="Welfare Committee">Welfare Committee</option>
-                    <option value="Public Works Committee">Public Works Committee</option>
-                    <option value="Taxation Committee">Taxation Committee</option>
-                  </optgroup>
-                  <optgroup label="── Others ──">
-                    <option value="Secretary">Secretary</option>
-                    <option value="Deputy Mayor">Deputy Mayor</option>
-                  </optgroup>
-                </select>
-              </div>
-
-              <input type="text" placeholder="Add a note label (optional)" value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-
-              <div className="flex items-center gap-3">
-                {!isRecording ? (
-                  <button onClick={startRecording} disabled={uploadingVoice || !voiceRecipient}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium ${voiceRecipient ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'}`}>
-                    🎙️ Start Recording
-                  </button>
-                ) : (
-                  <button onClick={stopRecording}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium bg-gray-700 animate-pulse">
-                    ⏹️ Stop ({formatTime(recordingTime)} / 1:00)
-                  </button>
-                )}
-                {uploadingVoice && <span className="text-sm text-gray-500">⏳ Saving...</span>}
-                {!voiceRecipient && !isRecording && <span className="text-xs text-orange-500">Select recipient first</span>}
-              </div>
-            </div>
-
             {voiceNotes.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">No voice notes yet</p>
+              <p className="text-sm text-gray-400 text-center py-4">No voice notes yet — use the recorder above</p>
             ) : (
               <div className="space-y-3">
                 {voiceNotes.map((note) => (
@@ -463,19 +481,19 @@ export default function RequestDetail() {
             <div className="space-y-2 text-sm">
               <TrackStep done={true} label="Submitted by Councillor" value={r.requesterName} />
               <TrackStep
-                done={['UNDER_MAYOR_REVIEW', 'APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['UNDER_MAYOR_REVIEW','APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Under Mayor Review"
                 value={r.status === 'UNDER_MAYOR_REVIEW' ? '⏳ Pending' : null} />
               <TrackStep
-                done={['APPROVED', 'SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['APPROVED','SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Approved"
-                value={['APPROVED', 'SENT_TO_DEPARTMENT'].includes(r.status) ? 'Mayor' : null} />
+                value={['APPROVED','SENT_TO_DEPARTMENT'].includes(r.status) ? 'Mayor' : null} />
               <TrackStep
-                done={['SENT_TO_DEPARTMENT', 'FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['SENT_TO_DEPARTMENT','FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="Sent to Department"
                 value={r.department} />
               <TrackStep
-                done={['FILE_NUMBER_GENERATED', 'IN_PROGRESS', 'CLOSED'].includes(r.status)}
+                done={['FILE_NUMBER_GENERATED','IN_PROGRESS','CLOSED'].includes(r.status)}
                 label="File Number Generated"
                 value={r.fileNumber} />
               <TrackStep
@@ -527,7 +545,7 @@ export default function RequestDetail() {
                   ))}
                 </select>
               </div>
-              {['FILE_NUMBER_GENERATED', 'SENT_TO_DEPARTMENT', 'IN_PROGRESS', 'APPROVED', 'CLOSED'].includes(statusForm.status) && (
+              {['FILE_NUMBER_GENERATED','SENT_TO_DEPARTMENT','IN_PROGRESS','APPROVED','CLOSED'].includes(statusForm.status) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">File Number</label>
                   <input type="text" placeholder="e.g. MC/2025/05/1001" value={statusForm.fileNumber}
